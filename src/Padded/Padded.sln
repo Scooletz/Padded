@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Padded", "Padded\Padded.csproj", "{05060784-44A0-4B53-9658-C8B5CF197A20}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyToProcess", "AssemblyToProcess\AssemblyToProcess.csproj", "{000D1B18-92E2-4076-A7CD-9EAD0FB82519}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Padded.Tests", "Padded.Tests\Padded.Tests.csproj", "{4D0AE7E1-1CF4-462C-B8B2-40EAB7B25D13}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{05060784-44A0-4B53-9658-C8B5CF197A20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05060784-44A0-4B53-9658-C8B5CF197A20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05060784-44A0-4B53-9658-C8B5CF197A20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05060784-44A0-4B53-9658-C8B5CF197A20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{000D1B18-92E2-4076-A7CD-9EAD0FB82519}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{000D1B18-92E2-4076-A7CD-9EAD0FB82519}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{000D1B18-92E2-4076-A7CD-9EAD0FB82519}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{000D1B18-92E2-4076-A7CD-9EAD0FB82519}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D0AE7E1-1CF4-462C-B8B2-40EAB7B25D13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D0AE7E1-1CF4-462C-B8B2-40EAB7B25D13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D0AE7E1-1CF4-462C-B8B2-40EAB7B25D13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D0AE7E1-1CF4-462C-B8B2-40EAB7B25D13}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
