@@ -41,10 +41,12 @@ namespace Padded.Fody
             var types = corlib.Types;
             var structLayoutAttribute =
                 types.Single(type => type.FullName == "System.Runtime.InteropServices.StructLayoutAttribute");
-            var ctor = structLayoutAttribute.GetConstructors().Single(md => md.Parameters.Count == 0);
+            var ctor =
+                structLayoutAttribute.GetConstructors()
+                    .Single(md => md.Parameters.Count == 1 && md.Parameters[0].ParameterType.Name == "Int16");
             var importedCtor = t.Module.ImportReference(ctor);
             var guidType = t.Module.ImportReference(typeof (Guid));
-            var ca = new CustomAttribute(importedCtor, new byte[] {0, 0, 0, 0});
+            var ca = new CustomAttribute(importedCtor, new byte[] {0, 0});
 
             t.Resolve().CustomAttributes.Add(ca);
 
