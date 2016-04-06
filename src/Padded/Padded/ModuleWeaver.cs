@@ -7,6 +7,8 @@ namespace Padded.Fody
 {
     public class ModuleWeaver
     {
+        public const string PaddingFieldPrefix = "$padding_";
+
         public Action<string> LogDebug { get; set; }
 
         public Action<string> LogInfo { get; set; }
@@ -31,36 +33,41 @@ namespace Padded.Fody
         {
             foreach (var paddedType in ModuleDefinition.Types.Where(HasPaddedAttribute))
             {
+                if (paddedType.IsInterface)
+                {
+                    throw new Exception("Padded.Fody cannot add padding to the interface");
+                }
+
+                if (paddedType.IsAbstract)
+                {
+                    throw new Exception("Padded.Fody should be used only on concrete classes");
+                }
+
                 PadType(paddedType);
             }
         }
 
         public static void PadType(TypeDefinition t)
         {
-            var corlib = ModuleDefinition.ReadModule(typeof (object).Module.FullyQualifiedName);
-            var types = corlib.Types;
-            var structLayoutAttribute =
-                types.Single(type => type.FullName == "System.Runtime.InteropServices.StructLayoutAttribute");
-            var ctor =
-                structLayoutAttribute.GetConstructors()
-                    .Single(md => md.Parameters.Count == 1 && md.Parameters[0].ParameterType.Name == "Int16");
-            var importedCtor = t.Module.ImportReference(ctor);
-            var guidType = t.Module.ImportReference(typeof (Guid));
-            var ca = new CustomAttribute(importedCtor, new byte[] {0, 0});
-
-            t.Resolve().CustomAttributes.Add(ca);
+            t.Attributes |= TypeAttributes.SequentialLayout;
+            var g = t.Module.ImportReference(typeof (Guid));
 
             // 4x16 at the beginning
-            t.Fields.Insert(0, new FieldDefinition("$1", FieldAttributes.Private, guidType));
-            t.Fields.Insert(1, new FieldDefinition("$2", FieldAttributes.Private, guidType));
-            t.Fields.Insert(2, new FieldDefinition("$3", FieldAttributes.Private, guidType));
-            t.Fields.Insert(3, new FieldDefinition("$4", FieldAttributes.Private, guidType));
+            t.Fields.Insert(0, GetField(g, 1));
+            t.Fields.Insert(1, GetField(g, 2));
+            t.Fields.Insert(2, GetField(g, 3));
+            t.Fields.Insert(3, GetField(g, 4));
 
             // 4x16 at the end
-            t.Fields.Add(new FieldDefinition("$5", FieldAttributes.Private, guidType));
-            t.Fields.Add(new FieldDefinition("$6", FieldAttributes.Private, guidType));
-            t.Fields.Add(new FieldDefinition("$7", FieldAttributes.Private, guidType));
-            t.Fields.Add(new FieldDefinition("$8", FieldAttributes.Private, guidType));
+            t.Fields.Add(GetField(g, 5));
+            t.Fields.Add(GetField(g, 6));
+            t.Fields.Add(GetField(g, 7));
+            t.Fields.Add(GetField(g, 8));
+        }
+
+        private static FieldDefinition GetField(TypeReference guidType, int i)
+        {
+            return new FieldDefinition($"{PaddingFieldPrefix}{i}", FieldAttributes.Private, guidType);
         }
 
         private static bool HasPaddedAttribute(TypeDefinition type)

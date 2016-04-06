@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Mono.Cecil;
 using NUnit.Framework;
 using Padded.Fody;
+using Padded.Tests.Utils;
 
 namespace Padded.Tests
 {
@@ -31,6 +35,35 @@ namespace Padded.Tests
             moduleDefinition.Write(afterAssemblyPath);
 
             var assembly = Assembly.LoadFile(afterAssemblyPath);
+
+            foreach (var type in assembly.DefinedTypes)
+            {
+                if (type.Name.StartsWith("Padded") && type.Name != "PaddedAttribute")
+                {
+                    TestType(type);
+                }
+            }
+        }
+
+        private void TestType(Type type)
+        {
+            var offsets = FieldAddressFinder.GetFieldOffsets(type);
+            var fieldOrdered = offsets.OrderBy(kvp => kvp.Value).ToArray();
+
+            for (var i = 0; i < 4; i++)
+            {
+                var kvp = fieldOrdered[i];
+                Assert.True(kvp.Key.Name.StartsWith(ModuleWeaver.PaddingFieldPrefix));
+                Assert.AreEqual(typeof (Guid), kvp.Key.FieldType);
+                Assert.AreEqual(i*Marshal.SizeOf<Guid>(), kvp.Key);
+            }
+
+            for (var i = fieldOrdered.Length - 4; i < 4; i++)
+            {
+                var kvp = fieldOrdered[i];
+                Assert.True(kvp.Key.Name.StartsWith(ModuleWeaver.PaddingFieldPrefix));
+                Assert.AreEqual(typeof (Guid), kvp.Key.FieldType);
+            }
         }
     }
 }

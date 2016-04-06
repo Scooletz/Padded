@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
-using Padded.Fody;
 
-namespace Padded.Tests
+namespace Padded.Tests.Utils
 {
     public class FieldAddresFinderTests
     {

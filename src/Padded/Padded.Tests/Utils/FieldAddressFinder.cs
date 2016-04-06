@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using Sigil;
 
-namespace Padded.Fody
+namespace Padded.Tests.Utils
 {
     public static class FieldAddressFinder
     {
