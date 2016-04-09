@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Mono.Cecil;
 using NUnit.Framework;
 using Padded.Fody;
@@ -13,6 +11,8 @@ namespace Padded.Tests
 {
     public class ModuleWeaverTests
     {
+        private const int CacheLineSize = 64;
+
         [Test]
         public void Test()
         {
@@ -45,25 +45,22 @@ namespace Padded.Tests
             }
         }
 
-        private void TestType(Type type)
+        private static void TestType(Type type)
         {
             var offsets = FieldAddressFinder.GetFieldOffsets(type);
-            var fieldOrdered = offsets.OrderBy(kvp => kvp.Value).ToArray();
+            var fieldOrdered = offsets.OrderBy(_ => _.Value).ToArray();
+            var last = fieldOrdered.Last().Value;
 
-            for (var i = 0; i < 4; i++)
-            {
-                var kvp = fieldOrdered[i];
-                Assert.True(kvp.Key.Name.StartsWith(ModuleWeaver.PaddingFieldPrefix));
-                Assert.AreEqual(typeof (Guid), kvp.Key.FieldType);
-                Assert.AreEqual(i*Marshal.SizeOf<Guid>(), kvp.Key);
-            }
+            var fromBeginningTo =
+                fieldOrdered.SkipWhile(_ => _.Key.Name.StartsWith("$padding_")).First().Value;
+            var fromEndTo =
+                fieldOrdered.OrderByDescending(_ => _.Value)
+                    .TakeWhile(_ => _.Key.Name.StartsWith("$padding_"))
+                    .Select(kvp => kvp.Value)
+                    .Last();
 
-            for (var i = fieldOrdered.Length - 4; i < 4; i++)
-            {
-                var kvp = fieldOrdered[i];
-                Assert.True(kvp.Key.Name.StartsWith(ModuleWeaver.PaddingFieldPrefix));
-                Assert.AreEqual(typeof (Guid), kvp.Key.FieldType);
-            }
+            Assert.LessOrEqual(CacheLineSize, last - fromEndTo);
+            Assert.LessOrEqual(CacheLineSize, fromBeginningTo);
         }
     }
 }

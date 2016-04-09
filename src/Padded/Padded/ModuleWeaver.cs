@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using Mono.Cecil;
-using Mono.Cecil.Rocks;
 
 namespace Padded.Fody
 {
     public class ModuleWeaver
     {
         public const string PaddingFieldPrefix = "$padding_";
+        private const int CacheLineSize = 64;
+        private const int MinimalSizeOfObject = 4;
 
         public Action<string> LogDebug { get; set; }
 
@@ -31,6 +32,10 @@ namespace Padded.Fody
 
         public void Execute()
         {
+            var guid = ModuleDefinition.ImportReference(typeof (Guid));
+            var @byte = ModuleDefinition.ImportReference(typeof (byte));
+            var padding = BuildPaddingStructure(guid);
+
             foreach (var paddedType in ModuleDefinition.Types.Where(HasPaddedAttribute))
             {
                 if (paddedType.IsInterface)
@@ -43,31 +48,56 @@ namespace Padded.Fody
                     throw new Exception("Padded.Fody should be used only on concrete classes");
                 }
 
-                PadType(paddedType);
+                PadType(paddedType, @byte, padding);
             }
         }
 
-        public static void PadType(TypeDefinition t)
+        private TypeDefinition BuildPaddingStructure(TypeReference guid)
         {
-            t.Attributes |= TypeAttributes.SequentialLayout;
-            var g = t.Module.ImportReference(typeof (Guid));
-
-            // 4x16 at the beginning
-            t.Fields.Insert(0, GetField(g, 1));
-            t.Fields.Insert(1, GetField(g, 2));
-            t.Fields.Insert(2, GetField(g, 3));
-            t.Fields.Insert(3, GetField(g, 4));
-
-            // 4x16 at the end
-            t.Fields.Add(GetField(g, 5));
-            t.Fields.Add(GetField(g, 6));
-            t.Fields.Add(GetField(g, 7));
-            t.Fields.Add(GetField(g, 8));
+            var valueType = ModuleDefinition.ImportReference(typeof (ValueType));
+            const TypeAttributes structAttrs =
+                TypeAttributes.Public | TypeAttributes.SequentialLayout | TypeAttributes.BeforeFieldInit |
+                TypeAttributes.Sealed | TypeAttributes.AnsiClass;
+            var padding = new TypeDefinition("$Padded", "$PaddingStructure", structAttrs, valueType);
+            padding.Fields.Add(new FieldDefinition("Guid1", FieldAttributes.Private, guid));
+            padding.Fields.Add(new FieldDefinition("Guid2", FieldAttributes.Private, guid));
+            padding.Fields.Add(new FieldDefinition("Guid3", FieldAttributes.Private, guid));
+            padding.Fields.Add(new FieldDefinition("Guid4", FieldAttributes.Private, guid));
+            ModuleDefinition.Types.Add(padding);
+            return padding;
         }
 
-        private static FieldDefinition GetField(TypeReference guidType, int i)
+        public static void PadType(TypeDefinition t, TypeReference @byte, TypeReference @bytes64)
         {
-            return new FieldDefinition($"{PaddingFieldPrefix}{i}", FieldAttributes.Private, guidType);
+            // using TypeAttributes.SequentialLayout is useless as any reference type makes the type auto
+            // the approach is to:
+            // 1) add 16 objects, they will kept at the beginning
+            // 2) add 64 single bytes to the end to allow CLR move them till the end
+            // 3) add one 64bytes long struct to allow CLR move it to the beginning
+
+            var i = 0;
+
+            var @object = t.Module.ImportReference(typeof (object));
+
+            for (var j = 0; j < CacheLineSize/MinimalSizeOfObject; j++)
+            {
+                t.Fields.Insert(0, GetField(@object, ref i));
+            }
+            for (var j = 0; j < CacheLineSize + 1; j++)
+            {
+                t.Fields.Add(GetField(@byte, ref i));
+            }
+        }
+
+        private static FieldDefinition GetField(TypeReference type, ref int i)
+        {
+            i += 1;
+            return new FieldDefinition(GetName(i), FieldAttributes.Private, type);
+        }
+
+        private static string GetName(int i)
+        {
+            return $"{PaddingFieldPrefix}{i}";
         }
 
         private static bool HasPaddedAttribute(TypeDefinition type)
