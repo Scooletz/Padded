@@ -32,10 +32,6 @@ namespace Padded.Fody
 
         public void Execute()
         {
-            var guid = ModuleDefinition.ImportReference(typeof (Guid));
-            var @byte = ModuleDefinition.ImportReference(typeof (byte));
-            var padding = BuildPaddingStructure(guid);
-
             foreach (var paddedType in ModuleDefinition.Types.Where(HasPaddedAttribute))
             {
                 if (paddedType.IsInterface)
@@ -48,26 +44,11 @@ namespace Padded.Fody
                     throw new Exception("Padded.Fody should be used only on concrete classes");
                 }
 
-                PadType(paddedType, @byte, padding);
+                PadType(paddedType);
             }
         }
 
-        private TypeDefinition BuildPaddingStructure(TypeReference guid)
-        {
-            var valueType = ModuleDefinition.ImportReference(typeof (ValueType));
-            const TypeAttributes structAttrs =
-                TypeAttributes.Public | TypeAttributes.SequentialLayout | TypeAttributes.BeforeFieldInit |
-                TypeAttributes.Sealed | TypeAttributes.AnsiClass;
-            var padding = new TypeDefinition("$Padded", "$PaddingStructure", structAttrs, valueType);
-            padding.Fields.Add(new FieldDefinition("Guid1", FieldAttributes.Private, guid));
-            padding.Fields.Add(new FieldDefinition("Guid2", FieldAttributes.Private, guid));
-            padding.Fields.Add(new FieldDefinition("Guid3", FieldAttributes.Private, guid));
-            padding.Fields.Add(new FieldDefinition("Guid4", FieldAttributes.Private, guid));
-            ModuleDefinition.Types.Add(padding);
-            return padding;
-        }
-
-        public static void PadType(TypeDefinition t, TypeReference @byte, TypeReference @bytes64)
+        public static void PadType(TypeDefinition t)
         {
             // using TypeAttributes.SequentialLayout is useless as any reference type makes the type auto
             // the approach is to:
@@ -77,6 +58,7 @@ namespace Padded.Fody
 
             var i = 0;
 
+            var @byte = t.Module.ImportReference(typeof(byte));
             var @object = t.Module.ImportReference(typeof (object));
 
             for (var j = 0; j < CacheLineSize/MinimalSizeOfObject; j++)

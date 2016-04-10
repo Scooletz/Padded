@@ -3,7 +3,7 @@
 namespace AssemblyToProcess
 {
     [Padded]
-    public struct PaddedStruct
+    public class SimplePaddedClass
     {
         public byte ByteValue;
         public int IntValue;
