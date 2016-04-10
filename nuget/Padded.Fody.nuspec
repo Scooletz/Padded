@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata minClientVersion="2.8">
+    <id>Padded.Fody</id>
+    <version>1.0</version>
+    <title>Padded.Fody</title>
+    <authors>Szymon Kulec 'Scooletz'</authors>
+    <owners>Szymon Kulec 'Scooletz'</owners>
+    <developmentDependency>true</developmentDependency>
+    <licenseUrl>https://opensource.org/licenses/Apache-2.0</licenseUrl>
+    <projectUrl>https://github.com/Scooletz/Padded</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Applies padding on structs &amp; classes to remove false sharing.</description>
+    <language>en-US</language>
+    <tags>Padded, FalseSharing, ILWeaving, Fody, Cecil</tags>
+    <dependencies>
+      <dependency id="Fody" version="1.29.2"/>
+    </dependencies>
+  </metadata>
+</package>

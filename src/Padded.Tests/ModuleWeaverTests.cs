@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Mono.Cecil;
 using NUnit.Framework;
-using Padded.Fody;
 using Padded.Tests.Utils;
 
 namespace Padded.Tests
