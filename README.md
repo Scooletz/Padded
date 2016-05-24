@@ -14,4 +14,4 @@ namespace Padded.Fody
 }
 ```
 
-Every non-abstract class or struct that is marked with this attribute will have a padding applied, that should remove one of the most common concurrency related problems: the false sharing problem.
+Every non-abstract class or struct that is marked with this attribute will have a padding applied, that should remove one of the most common concurrency related problems: [the false sharing problem](http://mechanical-sympathy.blogspot.com/2011/07/false-sharing.html).
